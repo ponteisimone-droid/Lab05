@@ -1,4 +1,7 @@
 import flet as ft
+from flet import IconButton
+from flet.controls import alignment
+
 from alert import AlertManager
 from deposito_strumenti import DepositoStrumenti
 
@@ -35,8 +38,38 @@ def main(page: ft.Page):
     # ListView per mostrare la lista di strumenti aggiornata
     lista_strumenti = ft.ListView(expand=True, spacing=5, padding=10, auto_scroll=True)
 
+    # Handlers per la gestione dei pulsanti
+    def pulsante_piu(e):
+        currentVal = int(txt_costo.value)
+        txt_costo.value = str(currentVal + 1)
+        txt_costo.update()
+
+    def pulsante_meno(e):
+        currentVal = int(txt_costo.value)
+        txt_costo.value = str(currentVal - 1)
+        txt_costo.update()
+
+
+
+
     # Tutti i TextField per le info necessarie per aggiungere un nuovo strumento (tipo, marca, anno, contatore posti)
-    # TODO
+    txt_tipo = ft.TextField(label="Tipo", expand = True)
+    txt_marca = ft.TextField(label = "Marca", expand = True)
+    txt_anno = ft.TextField(label = "Anno di acquisto", expand = True)
+    txt_costo = ft.TextField(value = "0", expand = True, text_align = ft.TextAlign.CENTER)
+
+    bott_piu = ft.IconButton(
+        icon = ft.Icons.ADD,
+        icon_color = "green",
+        on_click = pulsante_piu
+    )
+
+    bott_meno = ft.IconButton(
+        icon = ft.Icons.REMOVE,
+        icon_color = "red",
+        on_click = pulsante_meno
+    )
+
 
     # --- FUNZIONI APP ---
     def aggiorna_lista_strumenti():
@@ -55,14 +88,35 @@ def main(page: ft.Page):
         txt_responsabile.value = f"Responsabile: {deposito.get_responsabile()}"
 
     # Handlers per la gestione dei pulsanti utili all'inserimento di un nuovo strumento
-    # TODO
+    def aggiunta_strumento(e):
+        try:
+            anno = int(txt_anno.value)
+            costo = float(txt_costo.value)
+        except ValueError:
+            alert.show_alert("inserisci valori numerici validi per anno e/o prezzo")
+            return
+
+        try:
+            s = deposito.aggiungi_strumento(txt_tipo.value, txt_marca.value, anno, costo)
+            aggiorna_lista_strumenti()
+        except Exception as error:
+            alert.show_alert("Errore durante l'aggiunta")
+            return
+
+
+        txt_marca.value = ""
+        txt_anno.value = ""
+        txt_costo.value = "0"
+        txt_tipo.value = ""
+
+        page.update()
 
     # --- EVENTI ---
     toggle_cambia_tema = ft.Switch(label="Tema scuro", value=True, on_change=cambia_tema)
     pulsante_conferma_responsabile = ft.Button("Conferma", on_click=conferma_responsabile)
 
     # Pulsanti per la gestione dell'inserimento di un nuovo strumento
-    # TODO
+    bott_agg = ft.Button(content = "Aggiungi Strumento", on_click = aggiunta_strumento)
 
     # --- LAYOUT ---
     page.add(
@@ -80,12 +134,19 @@ def main(page: ft.Page):
                alignment=ft.MainAxisAlignment.CENTER),
 
         # Sezione 3
-        # TODO
+        ft.Text("Aggiungi Strumento", size=20),
+
+        ft.Row(controls = [txt_tipo, txt_marca, txt_anno,bott_meno, txt_costo, bott_piu],
+               alignment = ft.MainAxisAlignment.CENTER
+               ),
+        ft.Row(controls = [bott_agg],
+               alignment = ft.MainAxisAlignment.CENTER
+               ),
 
         # Sezione 4
         ft.Divider(),
         ft.Text("Strumenti", size=20),
-        lista_strumenti,
+        lista_strumenti
     )
     aggiorna_lista_strumenti()
 
